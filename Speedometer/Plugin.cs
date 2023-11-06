@@ -21,6 +21,7 @@ namespace Speedometer
 
         private static Image _speedBar;
         private static TextMeshProUGUI _speedLabel;
+        private static TextMeshProUGUI _zipLabel;
         private static ConfigFile _config;
         private static ConfigEntry<bool> _useTotalSpeed;
         private static ConfigEntry<float> _customSpeedCap;
@@ -31,6 +32,7 @@ namespace Speedometer
         private static ConfigEntry<Color> _overMaxColor;
         private static ConfigEntry<bool> _outlineEnabled;
         private static Material _outlineMaterial;
+        private static ConfigEntry<bool> _zipSpeedEnabled;
 
         private const string MpS = "{0.0} M/S";
         private const string KmhFormat = "{0.0} KM/H";
@@ -43,6 +45,7 @@ namespace Speedometer
         private const string SettingsHeader = "Settings";
         private const string CosmeticHeader = "Cosmetic/Visual";
         private const string TotalSpeedSetting = "Whether to use the lateral (forward) speed or the total speed of movement.";
+        private const string ZipSpeedSetting = "Whether to display the stored speed for a billboard zip glitch or not.";
         private const string CustomCapSetting = "When set to above 0, the speed bar will use this value instead of the game's max speed value to calculate the fill percentage (in km/h).\nIf you use Movement Plus, a value of 400 is a good starting point.";
         private const string DisplaySetting = "How to display the speed as text.\nMpS = Meters per second\nKmH = Kilometers per hour\nMpH = Miles per hour";
         private const string OverMaxSetting = "Whether to change the speedometers color when going over the maximum speed.";
@@ -59,6 +62,7 @@ namespace Speedometer
             _config = Config;
             _useTotalSpeed = Config.Bind(SettingsHeader, "Use Total Speed?", true, TotalSpeedSetting);
             _customSpeedCap = Config.Bind(SettingsHeader, "Custom Speed Cap", 0.0f, CustomCapSetting);
+            _zipSpeedEnabled = Config.Bind(SettingsHeader, "Display Stored Zip Speed?", false, ZipSpeedSetting);
             _displayMode = Config.Bind(CosmeticHeader, "Speed Display Mode", DisplayMode.KmH, DisplaySetting);
             _speedBarColor = _config.Bind(CosmeticHeader, "Speedometer Color", new Color(0.839f, 0.349f, 0.129f));
             _displayOverMaxColor = _config.Bind(CosmeticHeader, "Display Threshold Color?", true, OverMaxSetting);
@@ -73,7 +77,6 @@ namespace Speedometer
 
         public static void InitializeUI(Transform speedBarBackground, Image speedBar, TextMeshProUGUI tricksLabel)
         {
-
             // Make the speed bar line up with the original boost bar because I like UI design
             speedBarBackground.position += Vector3.down * 7.5f;
             speedBarBackground.localScale = new Vector3(1.02f, 1.16f, 1.0f);
@@ -99,18 +102,30 @@ namespace Speedometer
             _speedLabel.transform.localPosition = tricksLabel.transform.localPosition;
             tricksLabel.transform.localPosition += Vector3.up * 32.0f;
 
+            if (_zipSpeedEnabled.Value)
+            {
+                _zipLabel = Instantiate(tricksLabel, tricksLabel.transform.parent);
+                _zipLabel.transform.localPosition = tricksLabel.transform.localPosition;
+                UpdateLastSpeed(0.0f);
+                tricksLabel.transform.localPosition += Vector3.up * 32.0f;
+            }
+
             if (_outlineEnabled.Value)
             {
                 // I don't like this but for some reason instantiated TextMeshProUGUI instances need a frame to let their properties be modified
-                _instance.StartCoroutine(SetSpeedLabelOutline());
+                _instance.StartCoroutine(SetLabelOutlines());
             }
         }
 
-        private static IEnumerator SetSpeedLabelOutline()
+        private static IEnumerator SetLabelOutlines()
         {
             yield return new WaitForEndOfFrame();
 
             _speedLabel.fontSharedMaterial = _outlineMaterial;
+            if (_zipSpeedEnabled.Value)
+            {
+                _zipLabel.fontSharedMaterial = _outlineMaterial;
+            }
         }
 
         public static void UpdateSpeedBar(Reptile.Player player)
@@ -150,19 +165,34 @@ namespace Speedometer
                 return;
             }
 
+            SetSpeedLableFormatted(speed, _speedLabel);
+        }
+
+        public static void UpdateLastSpeed(float speed)
+        {
+            if (!_zipSpeedEnabled.Value || _zipLabel == null)
+            {
+                return;
+            }
+
+            SetSpeedLableFormatted(speed, _zipLabel);
+        }
+
+        private static void SetSpeedLableFormatted(float speed, TextMeshProUGUI label)
+        {
             if (_displayMode.Value == DisplayMode.MpS)
             {
-                _speedLabel.SetText(MpS, speed);
+                label.SetText(MpS, speed);
             }
             else if (_displayMode.Value == DisplayMode.KmH)
             {
                 float speedKmh = speed * KmhFactor;
-                _speedLabel.SetText(KmhFormat, speedKmh);
+                label.SetText(KmhFormat, speedKmh);
             }
             else
             {
                 float speedKmh = speed * MphFactor;
-                _speedLabel.SetText(MphFormat, speedKmh);
+                label.SetText(MphFormat, speedKmh);
             }
         }
     }
