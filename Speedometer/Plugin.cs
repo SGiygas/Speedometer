@@ -60,8 +60,8 @@ namespace Speedometer
             _instance = this;
 
             _config = Config;
-            _useTotalSpeed = Config.Bind(SettingsHeader, "Use Total Speed?", true, TotalSpeedSetting);
-            _customSpeedCap = Config.Bind(SettingsHeader, "Custom Speed Cap", 0.0f, CustomCapSetting);
+            _useTotalSpeed = Config.Bind(SettingsHeader, "Use Total Speed?", false, TotalSpeedSetting);
+            _customSpeedCap = Config.Bind(SettingsHeader, "Custom Speed Cap", 67.5f, CustomCapSetting);
             _zipSpeedEnabled = Config.Bind(SettingsHeader, "Display Stored Zip Speed?", false, ZipSpeedSetting);
             _displayMode = Config.Bind(CosmeticHeader, "Speed Display Mode", DisplayMode.KmH, DisplaySetting);
             _speedBarColor = _config.Bind(CosmeticHeader, "Speedometer Color", new Color(0.839f, 0.349f, 0.129f));
