@@ -209,7 +209,7 @@ namespace Speedometer
                 speed = speed * KmhFactor;
                 unit = KmhLabel;
             }
-            else
+            else if (_displayMode.Value == DisplayMode.MpH)
             {
                 speed = speed * MphFactor;
                 unit = MphLabel;
