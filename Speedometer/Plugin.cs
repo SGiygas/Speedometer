@@ -77,6 +77,9 @@ namespace Speedometer
 
         public static void InitializeUI(Transform speedBarBackground, Image speedBar, TextMeshProUGUI tricksLabel)
         {
+            speedBarBackground.name = "speedBarBackground";
+            speedBar.name = "speedBar";
+
             // Make the speed bar line up with the original boost bar because I like UI design
             speedBarBackground.position += Vector3.down * 7.5f;
             speedBarBackground.localScale = new Vector3(1.02f, 1.16f, 1.0f);
@@ -119,7 +122,7 @@ namespace Speedometer
 
         private static IEnumerator SetLabelOutlines()
         {
-            yield return new WaitForEndOfFrame();
+            yield return new WaitForSecondsRealtime(0.1f);
 
             _speedLabel.fontSharedMaterial = _outlineMaterial;
             if (_zipSpeedEnabled.Value)
@@ -132,6 +135,7 @@ namespace Speedometer
         {
             float maxSpeed = _customSpeedCapKmh > 0.001f ? _customSpeedCapKmh : player.maxMoveSpeed;
             float speed = _useTotalSpeed.Value ? player.GetTotalSpeed() : player.GetForwardSpeed();
+            speed = Mathf.Max(0.0f, speed);
 
             //Subtract a small amount from max speed so that the fill amount actually reaches 1.0
             _speedBar.fillAmount = speed / (maxSpeed - 0.01f);
