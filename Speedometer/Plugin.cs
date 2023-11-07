@@ -1,7 +1,10 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
+using BepInEx.Logging;
 using HarmonyLib;
 using System.Collections;
+using System.Globalization;
+using System.Text;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -26,19 +29,26 @@ namespace Speedometer
         private static ConfigEntry<bool> _useTotalSpeed;
         private static ConfigEntry<float> _customSpeedCap;
         private static float _customSpeedCapKmh;
+        private static ConfigEntry<bool> _zipSpeedEnabled;
         private static ConfigEntry<DisplayMode> _displayMode;
         private static ConfigEntry<Color> _speedBarColor;
         private static ConfigEntry<bool> _displayOverMaxColor;
         private static ConfigEntry<Color> _overMaxColor;
         private static ConfigEntry<bool> _outlineEnabled;
         private static Material _outlineMaterial;
-        private static ConfigEntry<bool> _zipSpeedEnabled;
+        private static ConfigEntry<bool> _useMonoSpace;
 
-        private const string MpS = "{0.0} M/S";
-        private const string KmhFormat = "{0.0} KM/H";
         private const float KmhFactor = 3.6f;
-        private const string MphFormat = "{0.0} MPH";
         private const float MphFactor = 2.236936f;
+        private const string SpeedLabelFormat = "{0} {1}";
+        private const string CloseMonoTag = "</mspace>";
+        private const string StartMonoTag = "<mspace=1.133em>";
+        private const string SpeedLabelFormatMono = "<mspace=1.133em>{0}</mspace> {1}";
+        private const string MpsLabel = "M/S";
+        private const string KmhLabel = "KM/H";
+        private const string MphLabel = "MPH";
+        private static readonly CultureInfo _labelCulture = CultureInfo.InvariantCulture;
+        private static StringBuilder _labelBuilder;
 
         private static bool _speedOverMax;
 
@@ -50,6 +60,7 @@ namespace Speedometer
         private const string DisplaySetting = "How to display the speed as text.\nMpS = Meters per second\nKmH = Kilometers per hour\nMpH = Miles per hour";
         private const string OverMaxSetting = "Whether to change the speedometers color when going over the maximum speed.";
         private const string OutlineSetting = "Enables an outline around the speed and trick counter label, for better readability.";
+        private const string MonoSpaceSetting = "Makes it so numbers are mono-spaced, preventing jittery text when it changes frequently.";
 
         private static Plugin _instance;
 
@@ -68,6 +79,7 @@ namespace Speedometer
             _displayOverMaxColor = _config.Bind(CosmeticHeader, "Display Threshold Color?", true, OverMaxSetting);
             _overMaxColor = _config.Bind(CosmeticHeader, "Threshold Color", new Color(0.898f, 0.098f, 0.443f));
             _outlineEnabled = _config.Bind(CosmeticHeader, "Enable Text Outline?", true, OutlineSetting);
+            _useMonoSpace = _config.Bind(CosmeticHeader, "Enable Monospace Numbers?", true, MonoSpaceSetting);
 
             _customSpeedCapKmh = _customSpeedCap.Value > 0.001f ? _customSpeedCap.Value / KmhFactor : 0.0f;
 
@@ -77,6 +89,11 @@ namespace Speedometer
 
         public static void InitializeUI(Transform speedBarBackground, Image speedBar, TextMeshProUGUI tricksLabel)
         {
+            if (_useMonoSpace.Value)
+            {
+                _labelBuilder = new StringBuilder();
+            }
+
             speedBarBackground.name = "speedBarBackground";
             speedBar.name = "speedBar";
 
@@ -184,20 +201,36 @@ namespace Speedometer
 
         private static void SetSpeedLabelFormatted(float speed, TextMeshProUGUI label)
         {
-            if (_displayMode.Value == DisplayMode.MpS)
+            string format = _useMonoSpace.Value ? SpeedLabelFormatMono : SpeedLabelFormat;
+            string unit = MpsLabel;
+
+            if (_displayMode.Value == DisplayMode.KmH)
             {
-                label.SetText(MpS, speed);
-            }
-            else if (_displayMode.Value == DisplayMode.KmH)
-            {
-                float speedKmh = speed * KmhFactor;
-                label.SetText(KmhFormat, speedKmh);
+                speed = speed * KmhFactor;
+                unit = KmhLabel;
             }
             else
             {
-                float speedKmh = speed * MphFactor;
-                label.SetText(MphFormat, speedKmh);
+                speed = speed * MphFactor;
+                unit = MphLabel;
             }
+
+            string speedText = string.Format(_labelCulture, "{0:0.0}", speed);
+
+            if (_useMonoSpace.Value)
+            {
+                _labelBuilder.Clear();
+
+                int separatorIndex = speedText.IndexOf(_labelCulture.NumberFormat.NumberDecimalSeparator);
+
+                _labelBuilder.Append(speedText);
+                _labelBuilder.Insert(separatorIndex, CloseMonoTag);
+                _labelBuilder.Insert(separatorIndex + CloseMonoTag.Length + 1, StartMonoTag);
+
+                speedText = _labelBuilder.ToString();
+            }
+
+            label.SetText(string.Format(_labelCulture, format, speedText, unit));
         }
     }
 }
