@@ -165,7 +165,7 @@ namespace Speedometer
                 return;
             }
 
-            SetSpeedLableFormatted(speed, _speedLabel);
+            SetSpeedLabelFormatted(speed, _speedLabel);
         }
 
         public static void UpdateLastSpeed(float speed)
@@ -175,10 +175,10 @@ namespace Speedometer
                 return;
             }
 
-            SetSpeedLableFormatted(speed, _zipLabel);
+            SetSpeedLabelFormatted(speed, _zipLabel);
         }
 
-        private static void SetSpeedLableFormatted(float speed, TextMeshProUGUI label)
+        private static void SetSpeedLabelFormatted(float speed, TextMeshProUGUI label)
         {
             if (_displayMode.Value == DisplayMode.MpS)
             {
