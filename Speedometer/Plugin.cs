@@ -57,7 +57,7 @@ namespace Speedometer
         private const string TotalSpeedSetting = "Whether to use the lateral (forward) speed or the total speed of movement.";
         private const string ZipSpeedSetting = "Whether to display the stored speed for a billboard zip glitch or not.";
         private const string CustomCapSetting = "When set to above 0, the speed bar will use this value instead of the game's max speed value to calculate the fill percentage (in km/h).\nIf you use Movement Plus, a value of 400 is a good starting point.";
-        private const string DisplaySetting = "How to display the speed as text.\nMpS = Meters per second\nKmH = Kilometers per hour\nMpH = Miles per hour";
+        private const string DisplaySetting = "How to display the speed as text.";
         private const string OverMaxSetting = "Whether to change the speedometers color when going over the maximum speed.";
         private const string OutlineSetting = "Enables an outline around the speed and trick counter label, for better readability.";
         private const string MonoSpaceSetting = "Makes it so numbers are mono-spaced, preventing jittery text when it changes frequently.";

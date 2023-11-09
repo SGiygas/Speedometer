@@ -5,9 +5,9 @@ namespace Speedometer.Patches
     [HarmonyPatch(typeof(Reptile.WallrunLineAbility), nameof(Reptile.WallrunLineAbility.FixedUpdateAbility))]
     public class WallrunLineAbilityFixedUpdate
     {
-        public static void Postfix(float ___lastSpeed)
+        public static void Postfix(float ___lastSpeed, float ___nodeToNodeLength)
         {
-            Plugin.UpdateLastSpeed(___lastSpeed);
+            Plugin.UpdateLastSpeed(___nodeToNodeLength);
         }
     }
     [HarmonyPatch(typeof(Reptile.WallrunLineAbility), nameof(Reptile.WallrunLineAbility.Jump))]
@@ -15,7 +15,7 @@ namespace Speedometer.Patches
     {
         public static void Postfix(float ___lastSpeed)
         {
-            Plugin.UpdateLastSpeed(___lastSpeed);
+            //Plugin.UpdateLastSpeed(___lastSpeed);
         }
     }
 }
