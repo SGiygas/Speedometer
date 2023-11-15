@@ -2,6 +2,7 @@
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
+using Reptile;
 using System.Collections;
 using System.Globalization;
 using System.Text;
@@ -106,10 +107,18 @@ namespace Speedometer
 
             if (_outlineEnabled.Value)
             {
-                _outlineMaterial = tricksLabel.fontMaterial;
-                _outlineMaterial.SetColor(ShaderUtilities.ID_OutlineColor, Color.black);
-                _outlineMaterial.SetFloat(ShaderUtilities.ID_OutlineWidth, 0.075f);
-                tricksLabel.fontSharedMaterial = _outlineMaterial;
+                // This guy is changing my font after applying the outline!!
+                var localizer = tricksLabel.GetComponent<TMProFontLocalizer>();
+                localizer.enabled = false;
+
+                if (_outlineMaterial == null)
+                {
+                    _outlineMaterial = tricksLabel.fontMaterial;
+                    _outlineMaterial.EnableKeyword(ShaderUtilities.Keyword_Outline);
+                    _outlineMaterial.SetColor(ShaderUtilities.ID_OutlineColor, Color.black);
+                    _outlineMaterial.SetFloat(ShaderUtilities.ID_OutlineWidth, 0.075f);
+                }
+                tricksLabel.fontMaterial = _outlineMaterial;
             }
 
             if (_displayMode.Value == DisplayMode.None)
@@ -128,23 +137,6 @@ namespace Speedometer
                 _zipLabel.transform.localPosition = tricksLabel.transform.localPosition;
                 UpdateLastSpeed(0.0f);
                 tricksLabel.transform.localPosition += Vector3.up * 32.0f;
-            }
-
-            if (_outlineEnabled.Value)
-            {
-                // I don't like this but for some reason instantiated TextMeshProUGUI instances need a frame to let their properties be modified
-                _instance.StartCoroutine(SetLabelOutlines());
-            }
-        }
-
-        private static IEnumerator SetLabelOutlines()
-        {
-            yield return new WaitForSecondsRealtime(0.1f);
-
-            _speedLabel.fontSharedMaterial = _outlineMaterial;
-            if (_zipSpeedEnabled.Value)
-            {
-                _zipLabel.fontSharedMaterial = _outlineMaterial;
             }
         }
 
